@@ -17,12 +17,34 @@ $site_config = DB::table('konfigurasi')->first();
                         <a href="{{ $site_config->facebook }}"><i class="fab fa-facebook"></i></a> 
                         <a href="{{ $site_config->instagram }}"><i class="fab fa-instagram"></i></a> 
                      </li>
-                     <li> <a class="acclink" href="{{ 'login' }}">Login</a> </li>   
+
+                     {{-- Cek apakah user sudah login --}}
+                     @if(Session()->get('id_user'))
+                     <li>
+                        <a class="text-success acclink" href="{{ asset('admin/dasbor') }}">
+                           <i class="fa fa-lock"></i>
+                           {{ Session()->get('nama') }} ({{ Session()->get('akses_level') }})
+                        </a>
+                     </li>
+                     <li>
+                        <a class="text-danger acclink" href="{{ asset('login/logout') }}">
+                           <i class="fas fa-sign-out-alt"></i> Keluar
+                        </a>
+                     </li>
+                     @else
+                     <li> 
+                        <a class="acclink" href="{{ url('login') }}">
+                           <i class="fas fa-sign-in-alt"></i> Login
+                        </a> 
+                     </li>   
+                     @endif
+
                   </ul>
                </div>
             </div>
          </div>
       </div>
+
       <div class="h3-logo-row">
          <div class="container">
             <div class="row">

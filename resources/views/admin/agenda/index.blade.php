@@ -139,7 +139,7 @@
     </a></td>
     <td>
       <div class="btn-group">
-        <a href="{{ asset('agenda/read/'.$agenda->slug_agenda) }}" 
+        <a href="{{ asset('admin/agenda/read/'.$agenda->slug_agenda) }}" 
         class="btn btn-success btn-sm" target="_blank"><i class="fa fa-eye"></i></a>
 
         <a href="{{ asset('admin/agenda/edit/'.$agenda->id_agenda) }}" 

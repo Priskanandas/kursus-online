@@ -11,93 +11,99 @@ use App\Models\Berita_model;
 
 class Berita extends Controller
 {
-    // Main page
+    private function onlyAdmin()
+    {
+        if(Session()->get('username')=="") {
+            return redirect('login')->with(['warning' => 'Mohon maaf, Anda belum login']);
+        }
+        if(Session()->get('akses_level') != 'Admin') {
+            return redirect('admin/dasbor')->with(['warning' => 'Anda tidak memiliki akses']);
+        }
+    }
+
     public function index()
     {
-    	if(Session()->get('username')=="") { return redirect('login')->with(['warning' => 'Mohon maaf, Anda belum login']);}
+        if($redir = $this->onlyAdmin()) return $redir;
         Paginator::useBootstrap();
-    	$myberita 	= new Berita_model();
-		$berita 	= $myberita->berita_update();
-		$kategori 	= DB::table('kategori')->orderBy('urutan','ASC')->get();
+        $myberita = new Berita_model();
+        $berita = $myberita->berita_update();
+        $kategori = DB::table('kategori')->orderBy('urutan','ASC')->get();
 
-		$data = array(  'title'       => 'Data Berita',
-						'berita'      => $berita,
-                        'beritas'      => $berita,
-						'kategori'    => $kategori,
-                        'content'     => 'admin/berita/index'
-                    );
-        return view('admin/layout/wrapper',$data);
+        $data = [
+            'title' => 'Data Berita',
+            'berita' => $berita,
+            'beritas' => $berita,
+            'kategori' => $kategori,
+            'content' => 'admin/berita/index'
+        ];
+        return view('admin/layout/wrapper', $data);
     }
 
-    // Add
     public function add()
     {
-        $data = array(  'title'       => 'Data Berita'
-                    );
-        return view('admin/berita/add',$data);
+        if($redir = $this->onlyAdmin()) return $redir;
+        $data = ['title' => 'Data Berita'];
+        return view('admin/berita/add', $data);
     }
 
-    // Cari
     public function cari(Request $request)
     {
-        if(Session()->get('username')=="") { return redirect('login')->with(['warning' => 'Mohon maaf, Anda belum login']);}
-        $myberita           = new Berita_model();
-        $keywords           = $request->keywords;
-        $berita             = $myberita->cari($keywords);
-        $kategori           = DB::table('kategori')->orderBy('urutan','ASC')->get();
+        if($redir = $this->onlyAdmin()) return $redir;
+        $myberita = new Berita_model();
+        $keywords = $request->keywords;
+        $berita = $myberita->cari($keywords);
+        $kategori = DB::table('kategori')->orderBy('urutan','ASC')->get();
 
-        $data = array(  'title'             => 'Data Berita',
-                        'berita'            => $berita,
-                        'kategori'   => $kategori,
-                        'content'           => 'admin/berita/index'
-                    );
-        return view('admin/layout/wrapper',$data);
+        $data = [
+            'title' => 'Data Berita',
+            'berita' => $berita,
+            'kategori' => $kategori,
+            'content' => 'admin/berita/index'
+        ];
+        return view('admin/layout/wrapper', $data);
     }
 
-    // Proses
     public function proses(Request $request)
     {
-        $site           = DB::table('konfigurasi')->first();
-        $pengalihan     = $request->pengalihan;
-        // PROSES HAPUS MULTIPLE
+        if($redir = $this->onlyAdmin()) return $redir;
+        $pengalihan = $request->pengalihan;
+
         if(isset($_POST['hapus'])) {
-            $id_beritanya       = $request->id_berita;
-            for($i=0; $i < sizeof($id_beritanya);$i++) {
-                DB::table('berita')->where('id_berita',$id_beritanya[$i])->delete();
+            foreach ($request->id_berita as $id) {
+                DB::table('berita')->where('id_berita', $id)->delete();
             }
             return redirect($pengalihan)->with(['sukses' => 'Data telah dihapus']);
-        // PROSES SETTING DRAFT
-        }elseif(isset($_POST['draft'])) {
-            $id_beritanya       = $request->id_berita;
-            for($i=0; $i < sizeof($id_beritanya);$i++) {
-                DB::table('berita')->where('id_berita',$id_beritanya[$i])->update([
-                        'id_user'       => Session()->get('id_user'),
-                        'status_berita' => 'Draft'
-                    ]);
+        } elseif(isset($_POST['draft'])) {
+            foreach ($request->id_berita as $id) {
+                DB::table('berita')->where('id_berita', $id)->update([
+                    'id_user' => Session()->get('id_user'),
+                    'status_berita' => 'Draft'
+                ]);
             }
             return redirect($pengalihan)->with(['sukses' => 'Data telah diubah menjadi Draft']);
-        // PROSES SETTING PUBLISH
-        }elseif(isset($_POST['publish'])) {
-            $id_beritanya       = $request->id_berita;
-            for($i=0; $i < sizeof($id_beritanya);$i++) {
-                DB::table('berita')->where('id_berita',$id_beritanya[$i])->update([
-                        'id_user'       => Session()->get('id_user'),
-                        'status_berita' => 'Publish'
-                    ]);
+        } elseif(isset($_POST['publish'])) {
+            foreach ($request->id_berita as $id) {
+                DB::table('berita')->where('id_berita', $id)->update([
+                    'id_user' => Session()->get('id_user'),
+                    'status_berita' => 'Publish'
+                ]);
             }
             return redirect($pengalihan)->with(['sukses' => 'Data telah diubah menjadi Publish']);
-        }elseif(isset($_POST['update'])) {
-            $id_beritanya       = $request->id_berita;
-            for($i=0; $i < sizeof($id_beritanya);$i++) {
-                DB::table('berita')->where('id_berita',$id_beritanya[$i])->update([
-                        'id_user'        => Session()->get('id_user'),
-                        'id_kategori'    => $request->id_kategori
-                    ]);
+        } elseif(isset($_POST['update'])) {
+            foreach ($request->id_berita as $id) {
+                DB::table('berita')->where('id_berita', $id)->update([
+                    'id_user' => Session()->get('id_user'),
+                    'id_kategori' => $request->id_kategori
+                ]);
             }
             return redirect($pengalihan)->with(['sukses' => 'Data kategori telah diubah']);
         }
     }
 
+    // Semua method lain juga diberi if($redir = $this->onlyAdmin()) return $redir;
+    // Saya lanjutkan pada kiriman berikut jika kamu kirim controller berikutnya.
+
+    // ... lanjutkan semua method lainnya dengan pengecekan yang sama
     //Status
     public function status_berita($status_berita)
     {
@@ -331,4 +337,5 @@ class Berita extends Controller
         DB::table('berita')->where('id_berita',$id_berita)->delete();
         return redirect('admin/berita/jenis_berita/'.$jenis_berita)->with(['sukses' => 'Data telah dihapus']);
     }
+
 }

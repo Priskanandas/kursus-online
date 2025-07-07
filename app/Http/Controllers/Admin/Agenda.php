@@ -332,6 +332,28 @@ class Agenda extends Controller
         }
         return redirect('admin/agenda')->with(['sukses' => 'Data telah ditambah']);
     }
+ public function read($slug_agenda)
+{
+    $agenda = DB::table('agenda')
+        ->join('kategori_agenda', 'kategori_agenda.id_kategori_agenda', '=', 'agenda.id_kategori_agenda')
+        ->join('users', 'users.id_user', '=', 'agenda.id_user')
+        ->select('agenda.*', 'kategori_agenda.slug_kategori_agenda', 'kategori_agenda.nama_kategori_agenda', 'users.nama')
+        ->where('agenda.slug_agenda', $slug_agenda)
+        ->first();
+
+    if (!$agenda) {
+        return redirect('admin/agenda')->with(['warning' => 'Data tidak ditemukan']);
+    }
+
+    return view('admin/layout/wrapper', [
+        'title' => $agenda->judul_agenda,
+        'keywords' => $agenda->judul_agenda,
+        'deskripsi' => Str::limit(strip_tags($agenda->isi), 150),
+        'agenda' => $agenda,
+        'content' => 'admin/agenda/read'
+    ]);
+}
+
 
     // Delete
     public function delete($id_agenda)
